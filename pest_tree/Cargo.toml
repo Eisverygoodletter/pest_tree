@@ -1,0 +1,15 @@
+[package]
+name = "pest_tree"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+proc-macro2 = "1"
+quote = "1"
+syn = "2"
+pest = "*"
+pest_derive = "*"
+pest_tree_derive = { path = "../pest_tree_derive" }
+ariadne = "*"
