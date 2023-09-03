@@ -17,40 +17,47 @@ use syn::{
 pub(crate) mod struct_context;
 pub use struct_context::*;
 fn pretty_print(ts: &proc_macro2::TokenStream) -> String {
-    let file = syn::parse_file(&ts.to_string()).unwrap();
+    let file = syn::parse_file(&ts.to_string()).expect("pretty print died");
     prettyplease::unparse(&file)
 }
-use crate::attributes::BasicAttribute;
+use crate::attributes::{BasicAttribute, StrategyAttribute};
 pub(crate) fn struct_derive(item: syn::ItemStruct) -> TokenStream {
     let mut ctx = StructDeriveContext::build(item.ident.clone());
     for attr in &item.attrs {
         if !attr.path().is_ident("pest_tree") {
+            panic!("bad path {:?}", attr.path());
             // might be for another macro unrelated to pest_tree
             continue;
         }
-        let parsed_basic = attr.parse_args_with(BasicAttribute::parse);
+        let parsed_basic = attr.parse_args();
+        // let parsed_basic = attr.parse_args_with(BasicAttribute::parse);
         if let Ok(attr) = parsed_basic {
             ctx.add_overall_attr(attr);
+        } else {
+            panic!("failed parse {:#?}\n{:#?}", attr, parsed_basic.unwrap_err());
         }
     }
     for field in &item.fields {
         for attr in &field.attrs {
             if !attr.path().is_ident("pest_tree") {
+                panic!("bad path {:?}", attr.path());
                 continue;
             }
             let parsed_basic = attr.parse_args_with(BasicAttribute::parse);
             if let Ok(attr) = parsed_basic {
                 // add it todo
+                panic!("field attribute?");
             } else {
                 panic!("failed to parse field attribute {:#?}", attr);
             }
         }
     }
+    // panic!("{}", &ctx.get_implementation_token_stream());
     let s1 = pretty_print((&item.clone().into_token_stream()).into());
     let s2 = pretty_print(&ctx.get_implementation_token_stream());
-    panic!(
-        "\n{}------------------------------------------------------------\n{}",
-        s1, s2
-    );
+    // panic!(
+    //     "\n{}------------------------------------------------------------\n{}",
+    //     s1, s2
+    // );
     ctx.get_implementation_token_stream().into()
 }

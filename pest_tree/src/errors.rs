@@ -23,31 +23,23 @@ pub enum TreeError<'a, T: pest::RuleType> {
     DirectMatchError(DirectMatchError<'a, T>),
     StringConversionError(StringConversionError<'a, T>),
     BoxConversionError(BoxConversionError<'a, T>),
-    SequentialMatchError(SequentialMatchError<'a, T>)
+    SequentialMatchError(SequentialMatchError<'a, T>),
 }
-impl<T: pest::RuleType> TreeError<'_, T> {
+impl<'a, T: pest::RuleType + 'a> TreeError<'a, T> {
     pub fn eprint(&self) {
-        let trace: DisplayedTrace = (*self).clone().into();
+        let trace: DisplayedTrace = (*self).clone().to_displayed_trace();
         trace.eprint();
     }
-}
-
-impl<'a, T: pest::RuleType + 'a> From<TreeError<'a, T>>
-    for ariadne::Report<'a, (String, std::ops::Range<usize>)>
-{
-    fn from(value: TreeError<'a, T>) -> Self {
-        match value {
+    pub fn to_report(&self) -> ariadne::Report<'a, (String, std::ops::Range<usize>)> {
+        match self {
             TreeError::DirectMatchError(v) => v.to_report(),
             TreeError::StringConversionError(v) => v.to_report(),
             TreeError::BoxConversionError(v) => v.to_report(),
             TreeError::SequentialMatchError(v) => v.to_report(),
         }
     }
-}
-
-impl<'a, T: pest::RuleType + 'a> From<TreeError<'a, T>> for DisplayedTrace<'a> {
-    fn from(value: TreeError<'a, T>) -> Self {
-        match value.clone() {
+    pub fn to_displayed_trace(&self) -> DisplayedTrace<'a> {
+        match self.clone() {
             TreeError::DirectMatchError(v) => v.clone().to_displayed_trace(),
             TreeError::StringConversionError(v) => v.clone().to_displayed_trace(),
             TreeError::BoxConversionError(v) => v.clone().to_displayed_trace(),

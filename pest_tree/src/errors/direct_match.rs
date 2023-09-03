@@ -6,6 +6,8 @@ use ariadne::Fmt;
 pub struct DirectMatchError<'a, R: pest::RuleType> {
     pub pair: pest::iterators::Pair<'a, R>,
     pub context: Rc<ParsingContext>,
+    pub object_ident: String,
+    pub goal_rule: String,
 }
 
 impl<'a, R: pest::RuleType> TreeErrorVariant<'a, R> for DirectMatchError<'_, R> {
@@ -15,7 +17,13 @@ impl<'a, R: pest::RuleType> TreeErrorVariant<'a, R> for DirectMatchError<'_, R> 
             .with_label(
                 ariadne::Label::new((self.context.filename.clone(), range))
                     .with_message(format!(
-                        "Could not match rule {}",
+                        "Could not match rule {} when trying to match {}. Rule given was {} ",
+                        format!("{}", self.goal_rule)
+                            .as_str()
+                            .fg(ariadne::Color::Magenta),
+                        format!("{}", self.object_ident)
+                            .as_str()
+                            .fg(ariadne::Color::Magenta),
                         format!("{:?}", self.get_rule())
                             .as_str()
                             .fg(ariadne::Color::Magenta)
@@ -39,10 +47,14 @@ impl<'a, T: pest::RuleType> DirectMatchError<'a, T> {
     pub fn as_tree_error(
         failing_pair: pest::iterators::Pair<'a, T>,
         context: Rc<ParsingContext>,
+        ident: String,
+        rule: String,
     ) -> TreeError<'_, T> {
         let err = Self {
             pair: failing_pair.clone(),
             context,
+            object_ident: ident,
+            goal_rule: rule,
         };
         TreeError::DirectMatchError(err)
     }

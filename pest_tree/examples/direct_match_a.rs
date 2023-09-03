@@ -11,6 +11,8 @@
 //! a = { "a" }
 //! ```
 extern crate pest;
+use std::rc::Rc;
+
 use pest::*;
 extern crate pest_derive;
 #[macro_use]
@@ -25,16 +27,35 @@ use pest_tree_derive::PestTree;
 #[grammar = "../examples/sequential.pest"]
 pub struct DirectParser;
 
-#[derive(PestTree, Debug)]
+#[derive(PestTree, Debug, PartialEq)]
 #[pest_tree(strategy(Direct))]
 #[pest_tree(require(rule(Rule::a)))]
 struct A {}
 
 fn main() {
-    // let test_str = "abc";
-    // let parsed = DirectParser::parse(Rule::a, test_str);
-    // let res = A::from_pest(parsed.unwrap());
-    // let tree_error = res.unwrap_err();
-    // tree_error.print_report(test_str);
-    // println!("the result is {:#?}", tree_error.generate_report(test_str));
+    // successful match
+    let test_str = "a";
+    let parsed = DirectParser::parse(Rule::a, test_str)
+        .unwrap()
+        .next()
+        .unwrap();
+    let ctx = pest_tree::ParsingContext {
+        filename: "testfile.file".to_string(),
+        contents: test_str.to_string(),
+    };
+    let a = A::from_pest(parsed, Rc::new(ctx)).unwrap();
+    assert_eq!(a, A {});
+    // unsuccessful match (rule b instead of a)
+    let test_str = "b";
+    let parsed = DirectParser::parse(Rule::b, test_str)
+        .unwrap()
+        .next()
+        .unwrap();
+    let ctx = pest_tree::ParsingContext {
+        filename: "wrongfile.bad".to_string(),
+        contents: test_str.to_string(),
+    };
+    let tree_error = A::from_pest(parsed, Rc::new(ctx)).unwrap_err();
+    // pretty print error
+    tree_error.eprint();
 }

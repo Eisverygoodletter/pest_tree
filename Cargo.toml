@@ -1,5 +1,5 @@
 [workspace]
-workspace.resolver = "1"
+resolver = "1"
 members = [
     "pest_tree",
     "pest_tree_derive"

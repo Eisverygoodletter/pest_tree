@@ -21,13 +21,12 @@ macro_rules! pest_tree_implementation {
                     return Ok(v);
                 } else {
                     return Err(StringConversionError::from_str_conversion_error::<$typ>(
-                        pair,
-                        context
+                        pair, context,
                     ));
                 }
             }
         }
-    }
+    };
 }
 pest_tree_implementation!(u8);
 pest_tree_implementation!(u16);
@@ -41,19 +40,18 @@ pest_tree_implementation!(i64);
 pest_tree_implementation!(i128);
 pest_tree_implementation!(String);
 
-
 impl<R: pest::RuleType, T: PestTree<R>> PestTree<R> for Box<T> {
     fn from_pest(
-            pair: pest::iterators::Pair<'_, R>,
-            context: Rc<ParsingContext>,
-        ) -> Result<Self, TreeError<R>>
-        where
-            Self: Sized {
+        pair: pest::iterators::Pair<'_, R>,
+        context: Rc<ParsingContext>,
+    ) -> Result<Self, TreeError<R>>
+    where
+        Self: Sized,
+    {
         let res = T::from_pest(pair.clone(), context.clone());
         if let Ok(v) = res {
             Ok(Box::new(v))
-        }
-        else {
+        } else {
             Err(BoxConversionError::from_type::<T>(pair, context))
         }
     }
@@ -61,11 +59,12 @@ impl<R: pest::RuleType, T: PestTree<R>> PestTree<R> for Box<T> {
 
 impl<R: pest::RuleType, T: PestTree<R>> PestTree<R> for Option<T> {
     fn from_pest(
-            pair: pest::iterators::Pair<'_, R>,
-            context: Rc<ParsingContext>,
-        ) -> Result<Self, TreeError<R>>
-        where
-            Self: Sized {
+        pair: pest::iterators::Pair<'_, R>,
+        context: Rc<ParsingContext>,
+    ) -> Result<Self, TreeError<R>>
+    where
+        Self: Sized,
+    {
         let res = T::from_pest(pair, context);
         Ok(res.ok())
     }

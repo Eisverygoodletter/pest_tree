@@ -23,6 +23,12 @@ use strategy::*;
 mod attributes;
 use attributes::*;
 
+/// Includes information about the struct/enum that the macro is deriving for.
+pub(crate) struct DeriveContext {
+    pub ident: syn::Ident,
+    pub ident_with_type: String,
+}
+
 #[proc_macro_derive(PestTree, attributes(pest_tree))]
 pub fn pest_tree_derive(token_stream: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let ast: syn::Item = parse_macro_input!(token_stream);

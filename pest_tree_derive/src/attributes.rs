@@ -7,15 +7,23 @@
 )]
 use std::fmt::Debug;
 
+use crate::attributes::kw::basic::require;
+
 use super::*;
-use proc_macro2::{Ident, TokenStream};
+use proc_macro2::{Ident, Punct, TokenStream};
 use quote::{quote, quote_spanned, ToTokens};
 use syn::parse::{Parse, ParseStream};
+use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::{
     braced, parse_macro_input, parse_quote, token, Attribute, Data, DataEnum, DataStruct,
     DeriveInput, Expr, Fields, GenericParam, Generics, Index, Meta, Token, Variant,
 };
+
+pub mod conditional;
+pub use conditional::*;
+pub mod converter;
+pub use converter::*;
 
 pub mod kw {
     // basic
@@ -23,6 +31,7 @@ pub mod kw {
         syn::custom_keyword!(strategy);
         syn::custom_keyword!(require);
         syn::custom_keyword!(convert);
+        syn::custom_keyword!(step);
     }
     // strategy
     pub mod strategy {
@@ -33,7 +42,7 @@ pub mod kw {
     pub mod requirement {
         syn::custom_keyword!(rule);
         syn::custom_keyword!(validate);
-        syn::custom_keyword!(or);
+        syn::custom_keyword!(any);
     }
     // convert
     pub mod convert {
@@ -41,9 +50,12 @@ pub mod kw {
         syn::custom_keyword!(custom_s);
         syn::custom_keyword!(auto);
     }
+    pub mod step {
+        syn::custom_keyword!(skip);
+    }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub(crate) enum BasicAttribute {
     Strategy(StrategyAttribute),
     Require(RequireAttribute),
@@ -60,6 +72,8 @@ impl Parse for BasicAttribute {
             let inner;
             syn::parenthesized!(inner in input);
             let strat = inner.call(StrategyAttribute::parse)?;
+            let _ = inner.parse::<TokenStream>();
+            // panic!("alright {:#?}", strat);
             return Ok(BasicAttribute::Strategy(strat));
         }
         if input.peek(kw::basic::require) {
@@ -84,7 +98,7 @@ impl Parse for BasicAttribute {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub(crate) enum StrategyAttribute {
     Direct,
     Sequential,
@@ -104,11 +118,11 @@ impl Parse for StrategyAttribute {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub(crate) enum RequireAttribute {
     Rule(syn::Path),
     Validate,
-    Or,
+    Any(Vec<RequireAttribute>),
 }
 impl Parse for RequireAttribute {
     fn parse(input: ParseStream) -> syn::Result<Self> {
@@ -119,11 +133,20 @@ impl Parse for RequireAttribute {
             let rule_path = syn::Path::parse(&inner)?;
             return Ok(Self::Rule(rule_path));
         }
+        if input.peek(kw::requirement::any) {
+            let _ = input.parse::<kw::requirement::any>();
+            let inner;
+            syn::parenthesized!(inner in input);
+            let requirements = Punctuated::<RequireAttribute, Token!(,)>::parse_terminated(&inner)?;
+            let iter = requirements.into_iter();
+            let collected_vec = iter.collect::<Vec<_>>();
+            return Ok(Self::Any(collected_vec));
+        }
         unimplemented!("other require attributes");
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Clone)]
 pub(crate) enum ConvertAttribute {
     CustomP,
     CustomS,
@@ -143,4 +166,3 @@ impl Parse for ConvertAttribute {
         panic!("convert fail {:#?}", input);
     }
 }
-

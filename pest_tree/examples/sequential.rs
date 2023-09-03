@@ -47,8 +47,8 @@ pub struct Seq {
 fn main() {
     let test_str = "abc";
     let parsed = SequentialParser::parse(Rule::a, test_str);
-    let res = Seq::from_pest(parsed.unwrap());
-    let tree_error = res.unwrap_err();
-    tree_error.print_report(test_str);
-    println!("the result is {:#?}", tree_error.generate_report(test_str));
+    // let res = Seq::from_pest(parsed.unwrap());
+    // let tree_error = res.unwrap_err();
+    // tree_error.print_report(test_str);
+    // println!("the result is {:#?}", tree_error.generate_report(test_str));
 }
