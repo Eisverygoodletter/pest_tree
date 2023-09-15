@@ -36,6 +36,7 @@ This crate revolves around the trait `PestTree` which can be derived for Structs
 | `custom_p(...)` | A closure or a function that takes a `Pair` and outputs the type it should convert to.    | Convert tokens into custom types.                                                                                                          |
 | `custom_s(...)` | A closure or a function that accepts a `&str` and returns `true` if the input is accepted | Convert tokens into custom types.                                                                                                          |
 | `auto`          | None                                                                                      | Automatically convert the `pair` into one of the basic types (`pest_tree` will determine the type based on your struct member declaration) |
+| `chain(...)`    | Chain many functions together in sequence                                                 | Chain functions that convert from a pair into a custom type                                                                                 |
 
 <br><br><br>
 ---

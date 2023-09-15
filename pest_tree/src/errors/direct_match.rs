@@ -18,10 +18,12 @@ impl<'a, R: pest::RuleType> TreeErrorVariant<'a, R> for DirectMatchError<'_, R> 
                 ariadne::Label::new((self.context.filename.clone(), range))
                     .with_message(format!(
                         "Could not match rule {} when trying to match {}. Rule given was {} ",
-                        format!("{}", self.goal_rule)
+                        self.goal_rule
+                            .to_string()
                             .as_str()
                             .fg(ariadne::Color::Magenta),
-                        format!("{}", self.object_ident)
+                        self.object_ident
+                            .to_string()
                             .as_str()
                             .fg(ariadne::Color::Magenta),
                         format!("{:?}", self.get_rule())

@@ -12,3 +12,4 @@ proc-macro2 = "1"
 quote = "1"
 syn = { version="2", features=["full", "extra-traits", "printing"] }
 prettyplease = "0.2.12"
+derive_builder = "0.12.0"

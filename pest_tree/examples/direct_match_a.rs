@@ -11,6 +11,7 @@
 //! a = { "a" }
 //! ```
 extern crate pest;
+use pest_tree::ParsingContext;
 use std::rc::Rc;
 
 use pest::*;
@@ -35,7 +36,7 @@ struct A {}
 fn main() {
     // successful match
     let test_str = "a";
-    let parsed = DirectParser::parse(Rule::a, test_str)
+    let parsed: iterators::Pair<'_, Rule> = DirectParser::parse(Rule::a, test_str)
         .unwrap()
         .next()
         .unwrap();

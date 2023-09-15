@@ -25,7 +25,7 @@ impl<'a> DisplayedTrace<'a> {
             report.eprint();
         }
     }
-    pub fn add_cause<'b>(&mut self, cause: &mut DisplayedTrace<'a>) {
+    pub fn add_cause(&mut self, cause: &mut DisplayedTrace<'a>) {
         self.reports.append(&mut cause.reports);
     }
 }

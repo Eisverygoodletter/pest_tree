@@ -14,6 +14,8 @@ pub mod displayed;
 pub use displayed::*;
 pub mod sequential_match;
 pub use sequential_match::*;
+pub mod pair_count;
+pub use pair_count::*;
 
 /**
  * An error emitted by when parsing. For pretty-printing , consider using [`DisplayedError`] and [`DisplayedTrace`].
@@ -24,6 +26,7 @@ pub enum TreeError<'a, T: pest::RuleType> {
     StringConversionError(StringConversionError<'a, T>),
     BoxConversionError(BoxConversionError<'a, T>),
     SequentialMatchError(SequentialMatchError<'a, T>),
+    PairCountError(PairCountError<'a, T>),
 }
 impl<'a, T: pest::RuleType + 'a> TreeError<'a, T> {
     pub fn eprint(&self) {
@@ -36,6 +39,7 @@ impl<'a, T: pest::RuleType + 'a> TreeError<'a, T> {
             TreeError::StringConversionError(v) => v.to_report(),
             TreeError::BoxConversionError(v) => v.to_report(),
             TreeError::SequentialMatchError(v) => v.to_report(),
+            TreeError::PairCountError(v) => v.to_report(),
         }
     }
     pub fn to_displayed_trace(&self) -> DisplayedTrace<'a> {
@@ -44,6 +48,7 @@ impl<'a, T: pest::RuleType + 'a> TreeError<'a, T> {
             TreeError::StringConversionError(v) => v.clone().to_displayed_trace(),
             TreeError::BoxConversionError(v) => v.clone().to_displayed_trace(),
             TreeError::SequentialMatchError(v) => v.to_displayed_trace(),
+            TreeError::PairCountError(v) => v.to_displayed_trace(),
         }
     }
 }

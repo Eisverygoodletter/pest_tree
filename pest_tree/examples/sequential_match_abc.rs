@@ -15,9 +15,11 @@ extern crate pest_derive;
 extern crate pest_tree_derive;
 extern crate pest_tree;
 use pest_derive::*;
+use pest_tree::ParsingContext;
 use pest_tree::PestTree;
 use pest_tree::TreeError;
 use pest_tree_derive::PestTree;
+use pest_tree::*;
 
 #[derive(Parser)]
 #[grammar = "../examples/sequential.pest"]
@@ -37,8 +39,8 @@ pub struct B {}
 pub struct C {}
 #[derive(PestTree, Debug)]
 #[pest_tree(strategy(Sequential))]
-#[pest_tree(require(rule(Rule::seq)))]
-pub struct Seq {
+#[pest_tree(require(rule(Rule::abc)))]
+pub struct ABC {
     pub a: A,
     pub b: B,
     pub c: C,
@@ -46,6 +48,10 @@ pub struct Seq {
 
 fn main() {
     let test_str = "abc";
+    let ctx = pest_tree::ParsingContext {
+        filename: "testfile.file".to_string(),
+        contents: test_str.to_string(),
+    };
     let parsed = SequentialParser::parse(Rule::a, test_str);
     // let res = Seq::from_pest(parsed.unwrap());
     // let tree_error = res.unwrap_err();

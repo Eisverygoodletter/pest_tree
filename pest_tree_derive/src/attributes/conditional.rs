@@ -19,45 +19,101 @@ use syn::{
 };
 
 impl RequireAttribute {
-    pub fn get_condition(&self) -> TokenStream {
-        match self {
-            Self::Rule(p) => quote!({check_pair.as_rule() == #p}),
-            Self::Any(reqs) => {
-                // cond || cond2 || cond3;
-                let condition_assignments = reqs
-                    .into_iter()
-                    .map(|req| req.get_condition())
-                    .fold(quote!(false), |acc, elem| quote!(#acc || #elem));
-                quote!({#condition_assignments})
+    /// Get the rule name the attribute is referring to.
+    /// If a variant was "Rule::a", the rule name would be `Rule`
+    pub fn rule_enum_name(&self) -> Option<syn::Path> {
+        match &self {
+            Self::Any(v) => {
+                for requirement in v {
+                    let res = requirement.rule_enum_name();
+                    if res.is_some() {
+                        return res;
+                    }
+                }
+                None
             }
-            _ => unimplemented!("h"),
+            Self::Rule(p) => Some(p.clone()),
+            _ => None,
         }
     }
-    pub fn get_fail_error(&self, ctx: &DeriveContext) -> TokenStream {
+    /// Get the condition as an expression
+    pub fn condition(&self, check_pair: Option<&TokenStream>) -> TokenStream {
+        let v = quote!(check_pair);
+        let check_pair = check_pair.unwrap_or(&v);
+        /**
+         * TODO:
+         * Fix not creating an expression
+         */
+        match self {
+            Self::Rule(p) => quote! {#check_pair.as_rule() == #p},
+            Self::Any(requirements) => {
+                let conditions = requirements
+                    .iter()
+                    .map(|requirement| requirement.condition(Some(check_pair)))
+                    .fold(quote!(false), |acc, elem| quote!(#acc || #elem));
+                quote!(#conditions)
+            }
+            _ => unimplemented!("validation requirements are unimplemented"),
+        }
+    }
+    pub fn error(&self, ctx: &DeriveContext, check_pair: Option<&TokenStream>) -> TokenStream {
+        let v = quote!(check_pair);
+        let check_pair = check_pair.unwrap_or(&v);
+        let ident = &ctx.ident;
         match self {
             Self::Rule(p) => {
-                let ident = &ctx.ident_with_type;
+                let ident = &ctx.ident;
                 quote!(Err(pest_tree::DirectMatchError::as_tree_error(
-                    check_pair.clone(),
+                    #check_pair.clone(),
                     context.clone(),
                     stringify!(#ident).to_string(),
                     stringify!(#p).to_string()
                 )))
             }
             Self::Any(reqs) => {
-                quote!(panic!("forgot to implement"))
+                quote!(panic!("any error hasn't been implemented"))
             }
             _ => unimplemented!("wow"),
         }
     }
-    pub fn fail_if_not_condition(&self, ctx: &DeriveContext) -> TokenStream {
-        let condition = self.get_condition();
-        let failing_error = self.get_fail_error(ctx);
-        quote!(
-            let succeeded = #condition;
-            if !succeeded {
-                return #failing_error;
+    /// [`RequireAttribute::condition`] and [`RequireAttribute::error`] combined
+    pub fn check(&self, ctx: &DeriveContext, check_pair: Option<&TokenStream>) -> TokenStream {
+        let expr = self.condition(check_pair);
+        let err = self.error(ctx, check_pair);
+        quote! {
+            if !(#expr) {
+                return #err;
             }
-        )
+        }
     }
 }
+
+// impl RequireAttribute {
+//     pub fn get_fail_error(&self, ctx: &DeriveContext) -> TokenStream {
+//         match self {
+//             Self::Rule(p) => {
+//                 let ident = &ctx.ident_with_type;
+//                 quote!(Err(pest_tree::DirectMatchError::as_tree_error(
+//                     check_pair.clone(),
+//                     context.clone(),
+//                     stringify!(#ident).to_string(),
+//                     stringify!(#p).to_string()
+//                 )))
+//             }
+//             Self::Any(reqs) => {
+//                 quote!(panic!("forgot to implement"))
+//             }
+//             _ => unimplemented!("wow"),
+//         }
+//     }
+//     pub fn fail_if_not_condition(&self, ctx: &DeriveContext) -> TokenStream {
+//         let condition = self.get_condition();
+//         let failing_error = self.get_fail_error(ctx);
+//         quote!(
+//             let succeeded = #condition;
+//             if !succeeded {
+//                 return #failing_error;
+//             }
+//         )
+//     }
+// }

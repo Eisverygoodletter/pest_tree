@@ -1,4 +1,4 @@
 a = { "a" }
 b = { "b" }
 c = { "c" }
-seq = { a ~ b ~ c }
+abc = { a ~ b ~ c }

@@ -21,7 +21,7 @@ impl<'a, R: pest::RuleType + 'a> TreeErrorVariant<'a, R> for SequentialMatchErro
         ariadne::Report::build(ariadne::ReportKind::Error, self.context.filename.clone(), 0)
             .with_label(
                 ariadne::Label::new((self.context.filename.clone(), range))
-                    .with_message(format!("Failed to match due member error")),
+                    .with_message("Failed to match due to failing to match a member"),
             )
             .with_code(4)
             .with_message("Did not match Sequentially")
@@ -32,6 +32,8 @@ impl<'a, R: pest::RuleType + 'a> TreeErrorVariant<'a, R> for SequentialMatchErro
         let mut disp: DisplayedTrace<'a> = DisplayedTrace { reports: vec![err] };
         let mut other_disp: DisplayedTrace<'a> = (*self.cause).clone().to_displayed_trace();
         disp.add_cause(&mut other_disp);
-        return disp;
+        disp
     }
 }
+
+// todo: find a way to create a sequential match error

@@ -19,11 +19,12 @@ use syn::{
     braced, parse_macro_input, parse_quote, token, Attribute, Data, DataEnum, DataStruct,
     DeriveInput, Expr, Fields, GenericParam, Generics, Index, Meta, Token, Variant,
 };
-
 pub mod conditional;
 pub use conditional::*;
 pub mod converter;
 pub use converter::*;
+pub mod strategy;
+pub use strategy::*;
 
 pub mod kw {
     // basic
@@ -98,6 +99,38 @@ impl Parse for BasicAttribute {
     }
 }
 
+impl BasicAttribute {
+    pub fn from_syn_attribute(attr: &Attribute) -> Option<Self> {
+        if !attr.path().is_ident("pest_tree") {
+            return None;
+        }
+        if let Ok(attr) = attr.parse_args_with(BasicAttribute::parse) {
+            Some(attr)
+        } else {
+            panic!("failed to parse attribute");
+        }
+    }
+    pub fn from_syn_attributes(attrs: &[Attribute]) -> Vec<Self> {
+        attrs
+            .iter()
+            .filter_map(BasicAttribute::from_syn_attribute)
+            .collect()
+    }
+    fn search_for_rule(&self) -> Option<syn::Path> {
+        if let Self::Require(req) = self {
+            req.rule_enum_name()
+        } else {
+            None
+        }
+    }
+    pub fn search_for_rule_in_attrs(attrs: &[Self]) -> Option<syn::Path> {
+        attrs
+            .iter()
+            .find(|v| v.search_for_rule().is_some())
+            .and_then(|v| v.search_for_rule())
+    }
+}
+
 #[derive(Debug, PartialEq, Clone)]
 pub(crate) enum StrategyAttribute {
     Direct,
@@ -121,7 +154,7 @@ impl Parse for StrategyAttribute {
 #[derive(Debug, PartialEq, Clone)]
 pub(crate) enum RequireAttribute {
     Rule(syn::Path),
-    Validate,
+    Validate(syn::Expr),
     Any(Vec<RequireAttribute>),
 }
 impl Parse for RequireAttribute {
@@ -142,27 +175,43 @@ impl Parse for RequireAttribute {
             let collected_vec = iter.collect::<Vec<_>>();
             return Ok(Self::Any(collected_vec));
         }
-        unimplemented!("other require attributes");
+        if input.peek(kw::requirement::validate) {
+            let _ = input.parse::<kw::requirement::validate>();
+            let inner;
+            syn::parenthesized!(inner in input);
+            let callable_expression = syn::Expr::parse(&inner)?;
+            return Ok(Self::Validate(callable_expression));
+        }
+        panic!("invalid require attribute");
     }
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub(crate) enum ConvertAttribute {
-    CustomP,
-    CustomS,
+    CustomP(syn::Expr),
+    CustomS(syn::Expr),
     Auto,
 }
 impl Parse for ConvertAttribute {
     fn parse(input: ParseStream) -> syn::Result<Self> {
         if input.peek(kw::convert::auto) {
+            let _ = input.parse::<TokenStream>();
             return Ok(Self::Auto);
         } else if input.peek(kw::convert::custom_p) {
             let _ = input.parse::<kw::convert::custom_p>();
             let inner;
             syn::parenthesized!(inner in input);
-            panic!("opos");
-            // todo
+            let callable_expression = syn::Expr::parse(&inner)?;
+            let _ = inner.parse::<TokenStream>();
+            return Ok(Self::CustomP(callable_expression));
+        } else if input.peek(kw::convert::custom_s) {
+            let _ = input.parse::<kw::convert::custom_s>();
+            let inner;
+            syn::parenthesized!(inner in input);
+            let callable_expression = syn::Expr::parse(&inner)?;
+            let _ = inner.parse::<TokenStream>();
+            return Ok(Self::CustomS(callable_expression));
         }
-        panic!("convert fail {:#?}", input);
+        panic!("invalid convert attribute");
     }
 }
