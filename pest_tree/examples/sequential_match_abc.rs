@@ -43,7 +43,7 @@ pub struct C {}
 pub struct ABC {
     pub a: A,
     pub b: B,
-    pub c: C,
+    pub c: Box<Box<C>>,
 }
 
 fn main() {
@@ -52,7 +52,11 @@ fn main() {
         filename: "testfile.file".to_string(),
         contents: test_str.to_string(),
     };
-    let parsed = SequentialParser::parse(Rule::a, test_str);
+    let parsed = SequentialParser::parse(Rule::abc, test_str).unwrap();
+    let abc = ABC::from_pest(parsed.into_iter().next().unwrap(), std::rc::Rc::new(ctx));
+    println!("{:#?}", abc.unwrap());
+
+    // let bad_test_str = "abc";
     // let res = Seq::from_pest(parsed.unwrap());
     // let tree_error = res.unwrap_err();
     // tree_error.print_report(test_str);

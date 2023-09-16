@@ -32,7 +32,7 @@ impl StructFieldContext for DirectFieldContext {
                             None
                         }
                     })
-                    .expect("conversion attribute missing")
+                    .unwrap_or(&ConvertAttribute::Auto)
                     .clone(),
             )
             .ty(field.ty.clone())
@@ -118,6 +118,7 @@ impl StructContext for DirectStructContext {
                 {
                     let check_pair = pair.clone();
                     #(#require_checks)*
+                    let convert_pair = pair.clone();
                     Ok(#ident {
                         #(#fields)*
                     })
@@ -162,6 +163,7 @@ mod tests {
                             ),
                         );
                     }
+                    let convert_pair = pair.clone();
                     Ok(A {
                         converted: String::from_pest(convert_pair),
                     })

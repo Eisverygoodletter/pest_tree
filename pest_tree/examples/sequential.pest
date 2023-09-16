@@ -2,3 +2,4 @@ a = { "a" }
 b = { "b" }
 c = { "c" }
 abc = { a ~ b ~ c }
+num = { ASCII_DIGIT* }

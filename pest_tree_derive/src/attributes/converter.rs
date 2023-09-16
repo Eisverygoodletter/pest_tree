@@ -29,7 +29,7 @@ impl ConvertAttribute {
         match self {
             Self::Auto => {
                 quote! {
-                    #end_type::from_pest(#convert_pair, context.clone())?
+                    <#end_type>::from_pest(#convert_pair, context.clone())?
                 }
             }
             Self::CustomP(pair_converter) => {
