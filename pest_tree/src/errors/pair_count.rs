@@ -1,12 +1,17 @@
-/// Error for not having the correct number of pair in a Pairs
+//! Error for not having the correct number of pair in a Pairs
 use super::super::*;
 use super::*;
 use ariadne::Fmt;
+/// Refer to [`TreeError::PairCountError`].
 #[derive(Debug, Clone)]
 pub struct PairCountError<'a, R: pest::RuleType> {
+    /// Pair which contained the `Pairs` with wrong number of fields.
     pub pair: pest::iterators::Pair<'a, R>,
+    /// The context.
     pub context: Rc<ParsingContext>,
+    /// Number of fields in the struct.
     pub expected_count: usize,
+    /// Number of [`pest::iterators::Pair`]s found in the pairs.
     pub count_found: usize,
 }
 
@@ -34,6 +39,7 @@ impl<'a, R: pest::RuleType + 'a> TreeErrorVariant<'a, R> for PairCountError<'a, 
 }
 
 impl<'a, R: pest::RuleType> PairCountError<'a, R> {
+    /// Initialize a [`PairCountError`].
     pub fn with_count(
         failing_pair: pest::iterators::Pair<'a, R>,
         context: Rc<ParsingContext>,
@@ -47,6 +53,7 @@ impl<'a, R: pest::RuleType> PairCountError<'a, R> {
             count_found,
         }
     }
+    /// Initialize a [`PairCountError`] wrapped within a [`TreeError`].
     pub fn as_tree_error(
         failing_pair: pest::iterators::Pair<'a, R>,
         context: Rc<ParsingContext>,

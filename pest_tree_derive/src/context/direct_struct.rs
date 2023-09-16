@@ -109,7 +109,7 @@ impl StructContext for DirectStructContext {
         quote! {
             #[allow(non_snake_case)]
             impl PestTree<#rule_ident> for #ident {
-                fn from_pest(
+                fn with_pair(
                     pair: pest::iterators::Pair<'_, #rule_ident>,
                     context: std::rc::Rc<ParsingContext>,
                 ) -> Result<Self, TreeError<#rule_ident>>

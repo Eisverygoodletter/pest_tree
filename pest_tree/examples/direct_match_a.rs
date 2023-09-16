@@ -44,7 +44,7 @@ fn main() {
         filename: "testfile.file".to_string(),
         contents: test_str.to_string(),
     };
-    let a = A::from_pest(parsed, Rc::new(ctx)).unwrap();
+    let a = A::with_pair(parsed, Rc::new(ctx)).unwrap();
     assert_eq!(a, A {});
     // unsuccessful match (rule b instead of a)
     let test_str = "b";
@@ -56,7 +56,7 @@ fn main() {
         filename: "wrongfile.bad".to_string(),
         contents: test_str.to_string(),
     };
-    let tree_error = A::from_pest(parsed, Rc::new(ctx)).unwrap_err();
+    let tree_error = A::with_pair(parsed, Rc::new(ctx)).unwrap_err();
     // pretty print error
     tree_error.eprint();
 }

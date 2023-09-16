@@ -1,9 +1,15 @@
+//! Failed to automatically convert from a [`str`] to the specified type.
 use super::*;
 use ariadne::Fmt;
+
+/// Refer to [`TreeError::StringConversionError`].
 #[derive(Debug, Clone)]
 pub struct StringConversionError<'a, R: pest::RuleType> {
+    /// The pair whose [`str`] couldn't be converted into the specified type.
     pub pair: pest::iterators::Pair<'a, R>,
+    /// Refer to [`ParsingContext`]
     pub context: Rc<ParsingContext>,
+    /// The name of the type that [`str::parse`] was trying to convert to.
     pub goal_type_name: String,
 }
 
@@ -39,6 +45,8 @@ impl<'a, R: pest::RuleType> TreeErrorVariant<'a, R> for StringConversionError<'_
 }
 
 impl<'a, R: pest::RuleType> StringConversionError<'a, R> {
+    /// Create a [`StringConversionError`] wrapped in a [`TreeError`] by referring to the 
+    /// error created by [`str::parse`].
     pub fn from_str_conversion_error<T: std::str::FromStr>(
         pair: pest::iterators::Pair<'a, R>,
         context: Rc<ParsingContext>,

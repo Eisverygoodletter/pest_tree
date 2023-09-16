@@ -1,11 +1,16 @@
+//! When matching a struct sequentially, a member failed to match.
 use super::super::*;
 use super::*;
 use ariadne::Fmt;
-/// Some inner step failed, causing this error.
+/// Refer to [`TreeError::SequentialMatchError`].
 #[derive(Debug, Clone)]
 pub struct SequentialMatchError<'a, R: pest::RuleType> {
+    /// Pair (representing the whole struct) that failed to match.
     pub pair: pest::iterators::Pair<'a, R>,
+    /// parsing context.
     pub context: Rc<ParsingContext>,
+    /// The cause of the failure. Can be caused by overall requirements not being fulfilled or some member field
+    /// not matching.
     pub cause: Box<TreeError<'a, R>>,
 }
 

@@ -1,15 +1,13 @@
+//! Implementations for basic types used by the `convert(auto)` conversion attribute.
+
 use super::*;
-
-trait FromStr: std::str::FromStr {}
-impl FromStr for i32 {}
-
 /// Used internally to quickly implement PestTree<R> for types implementing FromStr.
 /// Blanket implementations cannot be used because Rust doesn't support specialization yet.
-/// Using one would mean that `Box<T>` can't have its own separate implementation.
+/// Using one would mean that [`Box<T>`] can't have its own separate implementation.
 macro_rules! pest_tree_implementation {
     ($typ:ty) => {
         impl<R: pest::RuleType> PestTree<R> for $typ {
-            fn from_pest(
+            fn with_pair(
                 pair: pest::iterators::Pair<'_, R>,
                 context: Rc<ParsingContext>,
             ) -> Result<Self, TreeError<R>>
@@ -41,14 +39,14 @@ pest_tree_implementation!(i128);
 pest_tree_implementation!(String);
 
 impl<R: pest::RuleType, T: PestTree<R>> PestTree<R> for Box<T> {
-    fn from_pest(
+    fn with_pair(
         pair: pest::iterators::Pair<'_, R>,
         context: Rc<ParsingContext>,
     ) -> Result<Self, TreeError<R>>
     where
         Self: Sized,
     {
-        let res = T::from_pest(pair.clone(), context.clone());
+        let res = T::with_pair(pair.clone(), context.clone());
         if let Ok(v) = res {
             Ok(Box::new(v))
         } else {
@@ -58,14 +56,14 @@ impl<R: pest::RuleType, T: PestTree<R>> PestTree<R> for Box<T> {
 }
 
 impl<R: pest::RuleType, T: PestTree<R>> PestTree<R> for Option<T> {
-    fn from_pest(
+    fn with_pair(
         pair: pest::iterators::Pair<'_, R>,
         context: Rc<ParsingContext>,
     ) -> Result<Self, TreeError<R>>
     where
         Self: Sized,
     {
-        let res = T::from_pest(pair, context);
+        let res = T::with_pair(pair, context);
         Ok(res.ok())
     }
 }

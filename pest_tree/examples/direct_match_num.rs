@@ -33,7 +33,7 @@ fn main() {
         filename: "testfile.file".to_string(),
         contents: test_str.to_string(),
     };
-    let num = Num::from_pest(parsed, Rc::new(ctx)).unwrap();
+    let num = Num::with_pair(parsed, Rc::new(ctx)).unwrap();
     println!("the number is {}", num.number);
     assert_eq!(num.number, 32);
 }

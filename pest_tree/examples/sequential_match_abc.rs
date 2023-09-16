@@ -53,7 +53,7 @@ fn main() {
         contents: test_str.to_string(),
     };
     let parsed = SequentialParser::parse(Rule::abc, test_str).unwrap();
-    let abc = ABC::from_pest(parsed.into_iter().next().unwrap(), std::rc::Rc::new(ctx));
+    let abc = ABC::with_pair(parsed.into_iter().next().unwrap(), std::rc::Rc::new(ctx));
     println!("{:#?}", abc.unwrap());
 
     // let bad_test_str = "abc";

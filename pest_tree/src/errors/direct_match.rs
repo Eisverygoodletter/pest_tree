@@ -1,12 +1,17 @@
+//! Failed to match an exact string.
 use super::super::*;
 use super::*;
 use ariadne::Fmt;
-/// Failed to match an exact string.
+/// Refer to [`TreeError::DirectMatchError`].
 #[derive(Debug, Clone)]
 pub struct DirectMatchError<'a, R: pest::RuleType> {
+    /// Pair that failed to match the rule.
     pub pair: pest::iterators::Pair<'a, R>,
+    /// Refer to [`ParsingContext`].
     pub context: Rc<ParsingContext>,
+    /// The identifier of the struct/enum/field that failed to match a rule.
     pub object_ident: String,
+    /// The name of the rule. (e.g. `Rule::abc`)
     pub goal_rule: String,
 }
 

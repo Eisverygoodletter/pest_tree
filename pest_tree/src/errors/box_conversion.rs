@@ -1,10 +1,14 @@
+//! Failing to contain a type T within a Box.
 use super::*;
 use ariadne::Fmt;
-/// Failing to contain a type T within a Box.
+/// Refer to [`TreeError::BoxConversionError`].
 #[derive(Debug, Clone)]
 pub struct BoxConversionError<'a, R: pest::RuleType> {
+    /// Pair that couldn't be converted and stored in a [`Box`].
     pub pair: pest::iterators::Pair<'a, R>,
+    /// Refer to [`ParsingContext`].
     pub context: Rc<ParsingContext>,
+    /// The name of the type within the [`Box`].
     pub inner_type_name: String,
 }
 impl<'a, R: pest::RuleType> TreeErrorVariant<'a, R> for BoxConversionError<'_, R> {
@@ -39,6 +43,7 @@ impl<'a, R: pest::RuleType> TreeErrorVariant<'a, R> for BoxConversionError<'_, R
 }
 
 impl<'a, R: pest::RuleType> BoxConversionError<'a, R> {
+    /// Create a [`BoxConversionError`] wrapped in a [`TreeError`] based on the name of type `T` provided.
     pub fn from_type<T>(
         pair: pest::iterators::Pair<'a, R>,
         context: Rc<ParsingContext>,
