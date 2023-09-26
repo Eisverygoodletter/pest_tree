@@ -32,7 +32,7 @@ fn main() {
             filename: "pretty printed errors".to_string(),
             contents: test_str.to_string(),
         }),
-        "A".to_string(),
+        "B".to_string(),
         "Rule::a".to_string(),
     );
     conversion_error.eprint();

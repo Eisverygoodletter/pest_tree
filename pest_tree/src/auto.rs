@@ -101,3 +101,19 @@ impl<R: pest::RuleType, T: PestTree<R>> PestTree<R> for Option<T> {
         Ok(res.ok())
     }
 }
+
+impl<R: pest::RuleType, T: PestTree<R>> PestTree<R> for Vec<T> {
+    fn with_pair(
+        pair: pest::iterators::Pair<'_, R>,
+        context: Rc<ParsingContext>,
+    ) -> Result<Self, TreeError<R>>
+    where
+        Self: Sized,
+    {
+        let inner = pair.into_inner();
+        let v: Result<Vec<_>, _> = inner
+            .map(|pair| T::with_pair(pair, context.clone()))
+            .collect();
+        v
+    }
+}
