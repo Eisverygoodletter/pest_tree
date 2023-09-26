@@ -3,7 +3,6 @@
 //! This crate is centered around the [`pest_tree_derive::PestTree`] derive macro.
 //! The macro uses the `pest_tree` attribute macro to help derive the trait
 //! [`pest_tree_derive::PestTree`] for the relevant struct/enum.
-#![doc = include_str!("../../README.md")]
 #![allow(
     dead_code,
     irrefutable_let_patterns,
