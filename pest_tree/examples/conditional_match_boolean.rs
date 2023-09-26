@@ -17,8 +17,8 @@ extern crate pest_tree;
 use pest_derive::*;
 use pest_tree::PestTree;
 use pest_tree::TreeError;
-use pest_tree_derive::PestTree;
 use pest_tree::*;
+use pest_tree_derive::PestTree;
 
 #[derive(Parser)]
 #[grammar = "../examples/sequential.pest"]

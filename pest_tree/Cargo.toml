@@ -1,6 +1,6 @@
 [package]
 name = "pest_tree"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Eisverygoodletter"]
 repository = "https://github.com/Eisverygoodletter/pest_tree"
@@ -14,5 +14,5 @@ quote = "1"
 syn = "2"
 pest = "2.7.2"
 pest_derive = "2.7.2"
-pest_tree_derive = { path = "../pest_tree_derive", version = "0.1.0" }
+pest_tree_derive = { path = "../pest_tree_derive", version = "0.2.0" }
 ariadne = "0.3.0"

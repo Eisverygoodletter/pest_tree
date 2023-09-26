@@ -33,6 +33,7 @@ pub mod kw {
         syn::custom_keyword!(require);
         syn::custom_keyword!(convert);
         syn::custom_keyword!(step);
+        syn::custom_keyword!(skippable);
     }
     // strategy
     pub mod strategy {
@@ -63,6 +64,7 @@ pub(crate) enum BasicAttribute {
     Strategy(StrategyAttribute),
     Require(RequireAttribute),
     Convert(ConvertAttribute),
+    Skippable,
 }
 impl Parse for BasicAttribute {
     fn parse(input: ParseStream) -> syn::Result<Self> {
@@ -92,6 +94,10 @@ impl Parse for BasicAttribute {
             syn::parenthesized!(inner in input);
             let converter = inner.call(ConvertAttribute::parse)?;
             return Ok(BasicAttribute::Convert(converter));
+        }
+        if input.peek(kw::basic::skippable) {
+            let _ = input.parse::<kw::basic::skippable>();
+            return Ok(BasicAttribute::Skippable);
         }
         panic!("no strat {:#?}", input);
         Err(syn::Error::new(
@@ -130,6 +136,15 @@ impl BasicAttribute {
             .iter()
             .find(|v| v.search_for_rule().is_some())
             .and_then(|v| v.search_for_rule())
+    }
+    pub fn is_skippable(basic_attrs: &[Self]) -> bool {
+        basic_attrs
+            .iter()
+            .find(|f| match f {
+                BasicAttribute::Skippable => true,
+                _ => false,
+            })
+            .is_some()
     }
 }
 

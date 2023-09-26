@@ -5,3 +5,7 @@ abc = { a ~ b ~ c }
 num = { ASCII_DIGIT* }
 boolean = @{ "true" | "false" }
 num_or_a = ${ a | num }
+d = {"d"}
+e = {"e"}
+f = {"f"}
+def = ${ d? ~ e ~ f?}

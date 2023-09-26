@@ -17,8 +17,8 @@ extern crate pest_tree;
 use pest_derive::*;
 use pest_tree::PestTree;
 use pest_tree::TreeError;
-use pest_tree_derive::PestTree;
 use pest_tree::*;
+use pest_tree_derive::PestTree;
 
 #[derive(Parser)]
 #[grammar = "../examples/sequential.pest"]
@@ -34,7 +34,6 @@ pub struct A {}
 struct Num {
     pub number: i32,
 }
-
 
 #[derive(PestTree, Debug, PartialEq)]
 #[pest_tree(strategy(Conditional))]

@@ -29,7 +29,10 @@ impl ConditionalVariantContext {
             })
             .collect();
         match field {
-            syn::Fields::Unit => ConditionalVariantContext::Unit { reqs, ident: ident.clone() },
+            syn::Fields::Unit => ConditionalVariantContext::Unit {
+                reqs,
+                ident: ident.clone(),
+            },
             syn::Fields::Unnamed(unnamed) => ConditionalVariantContext::Unnamed {
                 tys: unnamed.unnamed.clone().into_iter().map(|f| f.ty).collect(),
                 reqs,

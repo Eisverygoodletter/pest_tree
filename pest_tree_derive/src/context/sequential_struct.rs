@@ -13,6 +13,7 @@ pub(crate) struct SequentialFieldContext {
     ty: syn::Type,
     require_attrs: Vec<RequireAttribute>,
     conversion_attr: ConvertAttribute,
+    skip_if_fail: bool,
 }
 
 impl StructFieldContext for SequentialFieldContext {
@@ -36,6 +37,7 @@ impl StructFieldContext for SequentialFieldContext {
             )
             .require_attrs(
                 basic_attributes
+                    .clone()
                     .into_iter()
                     .filter_map(|attr| {
                         if let BasicAttribute::Require(req) = attr {
@@ -46,6 +48,7 @@ impl StructFieldContext for SequentialFieldContext {
                     })
                     .collect(),
             )
+            .skip_if_fail(BasicAttribute::is_skippable(&basic_attributes))
             .build()
             .expect("failed to build sequential field context")
     }
@@ -54,24 +57,77 @@ impl StructFieldContext for SequentialFieldContext {
 impl SequentialFieldContext {
     // pub fn condition(&self) -> TokenStream {}
     pub fn check(&self, ctx: &DeriveContext) -> TokenStream {
-        let field_ident = format_ident!("{}_{}_check_pair", &ctx.ident, self.member_ident);
+        let field_value_ident = format_ident!("{}_{}_value", &ctx.ident, self.member_ident);
+        let rule_ident = &ctx.rule_ident.segments[0].ident;
+        // let field_ident = format_ident!("{}_{}_check_pair", &ctx.ident, self.member_ident);
         let checks = self
             .require_attrs
             .iter()
-            .map(|req| req.check(&ctx, (&quote! {#field_ident}).into()));
-        quote! {
-            let #field_ident = inner.next().expect("impossible: Pairs length was checked");
-            #(#checks)*
+            .map(|req| req.check(&ctx, (&quote! { convert_pair }).into()));
+        let expr = self
+            .conversion_attr
+            .expression(&self.ty, Some(&quote! { convert_pair }));
+        if !self.skip_if_fail {
+            quote! {
+                let context = closure_ctx.clone();
+                // let #field_ident = inner.next().expect("impossible: Pairs length was checked");
+                let convert_pair = {
+                    if previous_was_used {
+                        inner.next().expect("incorrect pair count?")
+                    }
+                    else {
+                        convert_pair
+                    }
+                };
+                #(#checks)*
+                
+                let #field_value_ident = #expr;
+                let previous_was_used = true;
+            }
+        } else {
+            // probably an option<>
+            quote! {
+                let context = closure_ctx.clone();
+                let potential_convert_pair = {
+                    if previous_was_used {
+                        inner.next()
+                    }
+                    else {
+                        Some(convert_pair.clone())
+                    }
+                };
+                let mut previous_was_used = true; // temporary value
+                let mut #field_value_ident = Option::None; //todo fix stupid error
+                if let Some(convert_pair) = potential_convert_pair {
+                    let potential_field_value_ident = move || -> Result<_,TreeError<#rule_ident>> {
+                        #(#checks)*
+                        
+                        return Ok(#expr);
+                    }();
+                    previous_was_used = potential_field_value_ident.is_ok();
+                    let potential_field_value_ident_unwrapped = potential_field_value_ident.unwrap();
+                    if previous_was_used {
+                        // just to make sure this is not an Ok(None)
+                        if potential_field_value_ident_unwrapped.is_none() {
+                            previous_was_used = false;
+                        }
+                    }
+                    #field_value_ident = potential_field_value_ident_unwrapped;
+                }
+                else {
+                    // there are no more items (either the rest are empty Option<>s, or we have an error)
+                    // convert_pair isn't shadowed, so we won't have type errors.
+                }
+                // future fix: potentially convert option::None to some user specified type
+            }
         }
     }
     pub fn field_pair(&self, ctx: &DeriveContext) -> TokenStream {
-        let field_ident = format_ident!("{}_{}_check_pair", &ctx.ident, self.member_ident);
+        let field_value_ident = format_ident!("{}_{}_value", &ctx.ident, self.member_ident);
+        // let field_ident = format_ident!("{}_{}_check_pair", &ctx.ident, self.member_ident);
         let ident = &self.member_ident;
-        let expr = self
-            .conversion_attr
-            .expression(&self.ty, Some(&quote! { #field_ident }));
         quote! {
-            #ident: #expr,
+            #ident: #field_value_ident,
         }
     }
 }
@@ -151,6 +207,7 @@ impl StructContext for SequentialStructContext {
                     let check_pair = pair.clone();
                     let backup_pair = pair.clone();
                     let backup_ctx = context.clone();
+                    let closure_ctx = context.clone();
                     let conversion_result = move || -> Result<Self, pest_tree::TreeError<'_, #rule_ident>> {
                         #(#overall_require_checks)*
                         // expand the members
@@ -158,7 +215,7 @@ impl StructContext for SequentialStructContext {
                         // check if there's a correct number of Pair in the Pairs
                         let inner_cloned_for_length = inner.clone();
                         let count_found = inner_cloned_for_length.count();
-                        if #expected_count != count_found {
+                        if #expected_count < count_found {
                             return Err(PairCountError::as_tree_error(
                                 check_pair,
                                 context,
@@ -166,6 +223,8 @@ impl StructContext for SequentialStructContext {
                                 count_found
                             ))
                         }
+                        let previous_was_used = false;
+                        let convert_pair = inner.next().expect("incorrect pair count?");
                         #(#field_checks)*
                         // TODO: finish code for expanding the "inner" Pairs (go write the code for the wrong pair )
                         return Ok(#ident {
