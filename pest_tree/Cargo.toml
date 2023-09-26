@@ -14,5 +14,5 @@ quote = "1"
 syn = "2"
 pest = "*"
 pest_derive = "*"
-pest_tree_derive = { path = "../pest_tree_derive" }
+pest_tree_derive = { path = "../pest_tree_derive", version = "0.1.0" }
 ariadne = "*"
