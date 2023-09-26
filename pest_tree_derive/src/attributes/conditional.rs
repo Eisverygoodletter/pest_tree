@@ -53,6 +53,9 @@ impl RequireAttribute {
                     .fold(quote!(false), |acc, elem| quote!(#acc || #elem));
                 quote!(#conditions)
             }
+            Self::Matches(s) => {
+                quote! {#check_pair.as_str() == #s}
+            }
             _ => unimplemented!("validation requirements are unimplemented"),
         }
     }
@@ -72,6 +75,15 @@ impl RequireAttribute {
             }
             Self::Any(reqs) => {
                 quote!(panic!("any error hasn't been implemented"))
+            }
+            Self::Matches(s) => {
+                quote! {
+                    Err(pest_tree::StringMatchError::as_tree_error(
+                        #check_pair.clone(),
+                        context.clone(),
+                        stringify!(#s).to_string()
+                    ))
+                }
             }
             _ => unimplemented!("wow"),
         }

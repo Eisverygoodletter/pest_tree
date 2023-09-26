@@ -4,8 +4,8 @@ use std::rc::Rc;
 
 use pest::*;
 extern crate pest_derive;
-extern crate pest_tree_derive;
 extern crate pest_tree;
+extern crate pest_tree_derive;
 use pest_derive::*;
 use pest_tree::PestTree;
 use pest_tree::TreeError;
@@ -19,7 +19,7 @@ pub struct DirectParser;
 #[pest_tree(strategy(Direct))]
 #[pest_tree(require(rule(Rule::num)))]
 struct Num {
-    pub number: i32
+    pub number: i32,
 }
 
 fn main() {
@@ -33,7 +33,7 @@ fn main() {
         filename: "testfile.file".to_string(),
         contents: test_str.to_string(),
     };
-    let num = Num::with_pair(parsed, Rc::new(ctx)).unwrap();
+    let num = <Num>::with_pair(parsed, Rc::new(ctx)).unwrap();
     println!("the number is {}", num.number);
     assert_eq!(num.number, 32);
 }

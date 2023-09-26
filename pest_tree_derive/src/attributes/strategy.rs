@@ -14,12 +14,16 @@ use syn::{
 impl StrategyAttribute {
     pub fn from_syn_attributes(attrs: &[Attribute]) -> Self {
         let attrs = BasicAttribute::from_syn_attributes(attrs);
-        attrs.iter().find_map(|attr| {
-            if let BasicAttribute::Strategy(strat) = attr {
-                Some(strat)
-            } else {
-                None
-            }
-        }).expect("missing strategy").clone()
+        attrs
+            .iter()
+            .find_map(|attr| {
+                if let BasicAttribute::Strategy(strat) = attr {
+                    Some(strat)
+                } else {
+                    None
+                }
+            })
+            .expect("missing strategy")
+            .clone()
     }
 }

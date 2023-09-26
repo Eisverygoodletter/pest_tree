@@ -45,7 +45,7 @@ impl<'a, R: pest::RuleType> TreeErrorVariant<'a, R> for StringConversionError<'_
 }
 
 impl<'a, R: pest::RuleType> StringConversionError<'a, R> {
-    /// Create a [`StringConversionError`] wrapped in a [`TreeError`] by referring to the 
+    /// Create a [`StringConversionError`] wrapped in a [`TreeError`] by referring to the
     /// error created by [`str::parse`].
     pub fn from_str_conversion_error<T: std::str::FromStr>(
         pair: pest::iterators::Pair<'a, R>,

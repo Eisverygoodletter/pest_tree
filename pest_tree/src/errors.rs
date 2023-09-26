@@ -17,11 +17,15 @@ pub mod sequential_match;
 pub use sequential_match::*;
 pub mod pair_count;
 pub use pair_count::*;
-/// An error emitted by when parsing. 
-/// 
+pub mod string_match;
+pub use string_match::*;
+pub mod conditional_enum;
+pub use conditional_enum::*;
+/// An error emitted by when parsing.
+///
 /// For pretty-printing, you can call [`TreeError::eprint`]
-/// 
-/// ```no_run
+///
+/// ```ignore
 /// // the contents are "b" and the rule is Rule::b. The PestParser won't detect any error, but
 /// // it won't be successfully parsed into struct A.
 /// let parsed_iter = PestParser::parse(Rule::b, ctx.contents.clone()).unwrap();
@@ -46,14 +50,18 @@ pub enum TreeError<'a, T: pest::RuleType> {
     /// When matching a struct sequentially, the number of [`pest::iterators::Pair`]s in the
     /// [`pest::iterators::Pairs`] did not match the number of fields in the struct.
     PairCountError(PairCountError<'a, T>),
+    /// When a matches(...) arm fails
+    StringMatchError(StringMatchError<'a, T>),
+    /// When none of the variants in an enum matches the pair given
+    ConditionalEnumError(ConditionalEnumError<'a, T>),
 }
 impl<'a, T: pest::RuleType + 'a> TreeError<'a, T> {
     /// Pretty print the error to the console.
-    /// 
+    ///
     /// Internally this function converts itself into a [`DisplayedTrace`] and calls
     /// [`DisplayedTrace::eprint`]
-    /// 
-    /// ```no_run
+    ///
+    /// ```ignore
     /// // ... get a pair and a context ...
     /// let tree_err = A::from_pair(pair, ctx.clone()).unwrap_err();
     /// tree_err.eprint();
@@ -70,6 +78,8 @@ impl<'a, T: pest::RuleType + 'a> TreeError<'a, T> {
             TreeError::BoxConversionError(v) => v.to_report(),
             TreeError::SequentialMatchError(v) => v.to_report(),
             TreeError::PairCountError(v) => v.to_report(),
+            TreeError::StringMatchError(v) => v.to_report(),
+            TreeError::ConditionalEnumError(v) => v.to_report(),
         }
     }
     /// Convert itself to a [`DisplayedTrace`]. If you only want the error printed to the console, use
@@ -81,6 +91,8 @@ impl<'a, T: pest::RuleType + 'a> TreeError<'a, T> {
             TreeError::BoxConversionError(v) => v.clone().to_displayed_trace(),
             TreeError::SequentialMatchError(v) => v.to_displayed_trace(),
             TreeError::PairCountError(v) => v.to_displayed_trace(),
+            TreeError::StringMatchError(v) => v.to_displayed_trace(),
+            TreeError::ConditionalEnumError(v) => v.to_displayed_trace(),
         }
     }
 }

@@ -144,10 +144,11 @@ mod tests {
         };
         let implementation = DirectStructContext::from_syn_item_struct(item_struct);
         let expected = quote! {
+            #[allow(non_snake_case)]
             impl PestTree<Rule> for A {
-                fn from_pest(
+                fn with_pair(
                     pair: pest::iterators::Pair<'_, Rule>,
-                    context: Rc<ParsingContext>,
+                    context: std::rc::Rc<ParsingContext>,
                 ) -> Result<Self, TreeError<Rule>>
                 where
                     Self: Sized,
@@ -165,7 +166,7 @@ mod tests {
                     }
                     let convert_pair = pair.clone();
                     Ok(A {
-                        converted: String::from_pest(convert_pair),
+                        converted: <String>::with_pair(convert_pair, context.clone())?,
                     })
                 }
             }

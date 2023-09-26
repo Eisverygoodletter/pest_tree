@@ -41,7 +41,13 @@ pub(crate) trait StructFieldContext {
     fn from_syn_field(field: &syn::Field) -> Self;
 }
 
+pub(crate) trait EnumVariantContext {
+    fn from_syn_variant(variant: &syn::Variant) -> Self;
+}
+
 pub(crate) mod direct_struct;
 pub(crate) use direct_struct::*;
 pub(crate) mod sequential_struct;
 pub(crate) use sequential_struct::*;
+pub(crate) mod conditional_enum;
+pub(crate) use conditional_enum::*;

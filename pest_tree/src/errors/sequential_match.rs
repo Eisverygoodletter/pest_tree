@@ -41,4 +41,18 @@ impl<'a, R: pest::RuleType + 'a> TreeErrorVariant<'a, R> for SequentialMatchErro
     }
 }
 
+impl<'a, R: pest::RuleType> SequentialMatchError<'a, R> {
+    /// Initialize a [`SequentialMatchError`] wrapped within a [`TreeError`].
+    pub fn as_tree_error(
+        failing_pair: pest::iterators::Pair<'a, R>,
+        context: Rc<ParsingContext>,
+        cause: TreeError<'a, R>,
+    ) -> TreeError<'a, R> {
+        TreeError::SequentialMatchError(Self {
+            pair: failing_pair,
+            context,
+            cause: Box::new(cause),
+        })
+    }
+}
 // todo: find a way to create a sequential match error

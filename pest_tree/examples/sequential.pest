@@ -3,3 +3,5 @@ b = { "b" }
 c = { "c" }
 abc = { a ~ b ~ c }
 num = { ASCII_DIGIT* }
+boolean = @{ "true" | "false" }
+num_or_a = ${ a | num }

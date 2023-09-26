@@ -38,6 +38,17 @@ pub fn pest_tree_derive(token_stream: proc_macro::TokenStream) -> proc_macro::To
                     let ctx = SequentialStructContext::from_syn_item_struct(item_struct);
                     ctx.to_impl().into()
                 }
+                _ => unreachable!("invalid parsing result (struct)"),
+            }
+        }
+        syn::Item::Enum(item_enum) => {
+            let strat = StrategyAttribute::from_syn_attributes(&item_enum.attrs);
+            match strat {
+                StrategyAttribute::Conditional => {
+                    let ctx = ConditionalEnumContext::from_syn_item_enum(item_enum);
+                    ctx.to_impl().into()
+                }
+                _ => unreachable!("invalid parsing result (enum)"),
             }
         }
         _ => todo!(),

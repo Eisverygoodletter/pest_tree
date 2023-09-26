@@ -149,24 +149,35 @@ impl StructContext for SequentialStructContext {
                 {
                     // checks for the overall pair
                     let check_pair = pair.clone();
-                    #(#overall_require_checks)*
-                    // expand the members
-                    let mut inner = pair.clone().into_inner();
-                    // check if there's a correct number of Pair in the Pairs
-                    let inner_cloned_for_length = inner.clone();
-                    let count_found = inner_cloned_for_length.count();
-                    if #expected_count != count_found {
-                        return Err(PairCountError::as_tree_error(
-                            pair,
-                            context,
-                            #expected_count,
-                            count_found
-                        ))
-                    }
-                    #(#field_checks)*
-                    // TODO: finish code for expanding the "inner" Pairs (go write the code for the wrong pair )
-                    Ok(#ident {
-                        #(#field_pairs)*
+                    let backup_pair = pair.clone();
+                    let backup_ctx = context.clone();
+                    let conversion_result = move || -> Result<Self, pest_tree::TreeError<'_, #rule_ident>> {
+                        #(#overall_require_checks)*
+                        // expand the members
+                        let mut inner = pair.clone().into_inner();
+                        // check if there's a correct number of Pair in the Pairs
+                        let inner_cloned_for_length = inner.clone();
+                        let count_found = inner_cloned_for_length.count();
+                        if #expected_count != count_found {
+                            return Err(PairCountError::as_tree_error(
+                                check_pair,
+                                context,
+                                #expected_count,
+                                count_found
+                            ))
+                        }
+                        #(#field_checks)*
+                        // TODO: finish code for expanding the "inner" Pairs (go write the code for the wrong pair )
+                        return Ok(#ident {
+                            #(#field_pairs)*
+                        });
+                    }();
+                    conversion_result.map_err(|err| {
+                        SequentialMatchError::as_tree_error(
+                            backup_pair,
+                            backup_ctx,
+                            err
+                        )
                     })
                 }
             }
@@ -190,7 +201,66 @@ mod tests {
             }
         };
         let implementation = SequentialStructContext::from_syn_item_struct(item_struct);
-        // panic!("{}", implementation.to_impl().to_string());
-        panic!("{}", pretty_print(&implementation.to_impl()));
+        let expected = quote! {
+            #[allow(non_snake_case)]
+            impl PestTree<Rule> for ABC {
+                fn with_pair(
+                    pair: pest::iterators::Pair<'_, Rule>,
+                    context: std::rc::Rc<ParsingContext>,
+                ) -> Result<Self, TreeError<Rule>>
+                where
+                    Self: Sized,
+                {
+                    let check_pair = pair.clone();
+                    let backup_pair = pair.clone();
+                    let backup_ctx = context.clone();
+                    let conversion_result = move || -> Result<Self, pest_tree::TreeError<'_, Rule>> {
+                        if !(check_pair.as_rule() == Rule::abc) {
+                            return Err(
+                                pest_tree::DirectMatchError::as_tree_error(
+                                    check_pair.clone(),
+                                    context.clone(),
+                                    stringify!(ABC).to_string(),
+                                    stringify!(Rule::abc).to_string(),
+                                ),
+                            );
+                        }
+                        let mut inner = pair.clone().into_inner();
+                        let inner_cloned_for_length = inner.clone();
+                        let count_found = inner_cloned_for_length.count();
+                        if 3usize != count_found {
+                            return Err(
+                                PairCountError::as_tree_error(check_pair, context, 3usize, count_found),
+                            );
+                        }
+                        let ABC_a_check_pair = inner
+                            .next()
+                            .expect("impossible: Pairs length was checked");
+                        let ABC_b_check_pair = inner
+                            .next()
+                            .expect("impossible: Pairs length was checked");
+                        let ABC_c_check_pair = inner
+                            .next()
+                            .expect("impossible: Pairs length was checked");
+                        return Ok(ABC {
+                            a: <A>::with_pair(ABC_a_check_pair, context.clone())?,
+                            b: <B>::with_pair(ABC_b_check_pair, context.clone())?,
+                            c: <C>::with_pair(ABC_c_check_pair, context.clone())?,
+                        });
+                    }();
+                    conversion_result
+                        .map_err(|err| {
+                            SequentialMatchError::as_tree_error(backup_pair, backup_ctx, err)
+                        })
+                }
+            }
+        };
+        use syn::ItemImpl;
+        let expected: ItemImpl = syn::parse2(expected).unwrap();
+        let generated: ItemImpl = syn::parse2(implementation.to_impl()).unwrap();
+        assert_eq!(
+            pretty_print(&expected.to_token_stream()),
+            pretty_print(&generated.to_token_stream())
+        );
     }
 }

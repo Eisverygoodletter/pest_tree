@@ -17,7 +17,7 @@ use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::{
     braced, parse_macro_input, parse_quote, token, Attribute, Data, DataEnum, DataStruct,
-    DeriveInput, Expr, Fields, GenericParam, Generics, Index, Meta, Token, Variant,
+    DeriveInput, Expr, Fields, GenericParam, Generics, Index, LitStr, Meta, Token, Variant,
 };
 pub mod conditional;
 pub use conditional::*;
@@ -38,12 +38,14 @@ pub mod kw {
     pub mod strategy {
         syn::custom_keyword!(Direct);
         syn::custom_keyword!(Sequential);
+        syn::custom_keyword!(Conditional);
     }
     // rule
     pub mod requirement {
         syn::custom_keyword!(rule);
         syn::custom_keyword!(validate);
         syn::custom_keyword!(any);
+        syn::custom_keyword!(matches);
     }
     // convert
     pub mod convert {
@@ -135,6 +137,7 @@ impl BasicAttribute {
 pub(crate) enum StrategyAttribute {
     Direct,
     Sequential,
+    Conditional,
 }
 impl Parse for StrategyAttribute {
     fn parse(input: ParseStream) -> syn::Result<Self> {
@@ -143,6 +146,9 @@ impl Parse for StrategyAttribute {
         }
         if input.peek(kw::strategy::Sequential) {
             return Ok(Self::Sequential);
+        }
+        if input.peek(kw::strategy::Conditional) {
+            return Ok(Self::Conditional);
         }
         Err(syn::Error::new(
             input.span(),
@@ -156,6 +162,7 @@ pub(crate) enum RequireAttribute {
     Rule(syn::Path),
     Validate(syn::Expr),
     Any(Vec<RequireAttribute>),
+    Matches(String),
 }
 impl Parse for RequireAttribute {
     fn parse(input: ParseStream) -> syn::Result<Self> {
@@ -181,6 +188,15 @@ impl Parse for RequireAttribute {
             syn::parenthesized!(inner in input);
             let callable_expression = syn::Expr::parse(&inner)?;
             return Ok(Self::Validate(callable_expression));
+        }
+        if input.peek(kw::requirement::matches) {
+            let _ = input.parse::<kw::requirement::matches>();
+            let inner;
+            syn::parenthesized!(inner in input);
+            let Ok(syn::Lit::Str(s)) = syn::Lit::parse(&inner) else {
+                panic!("expected string literal in matches");
+            };
+            return Ok(Self::Matches(s.value()));
         }
         panic!("invalid require attribute");
     }

@@ -1,7 +1,7 @@
 //! Contains [`DisplayedTrace`] and [`DisplayedError`] used for pretty printing errors.
 use super::super::*;
 /// A single error. Normally [`DisplayedTrace`]s should be used directly instead.
-/// 
+///
 /// This type only contains 1 error, without the cause. For some [`TreeError`] variants, errors can lead to
 /// more errors. [`DisplayedTrace`] is used because it contains many [`DisplayedError`]s.
 #[derive(Debug)]
