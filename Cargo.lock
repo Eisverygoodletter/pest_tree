@@ -202,7 +202,7 @@ dependencies = [
 
 [[package]]
 name = "pest_tree"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "ariadne",
  "pest",
@@ -215,7 +215,7 @@ dependencies = [
 
 [[package]]
 name = "pest_tree_derive"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "derive_builder",
  "prettyplease",
