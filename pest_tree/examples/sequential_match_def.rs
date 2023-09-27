@@ -43,13 +43,14 @@ pub struct F {}
 pub struct DEF {
     #[pest_tree(skippable)]
     pub d: Option<D>,
-    pub e: E,
+    #[pest_tree(skippable)]
+    pub e: Option<E>,
     #[pest_tree(skippable)]
     pub f: Option<F>,
 }
 
 fn main() {
-    let test_str = "de";
+    let test_str = "d";
     let ctx = pest_tree::ParsingContext {
         filename: "testfile.file".to_string(),
         contents: test_str.to_string(),

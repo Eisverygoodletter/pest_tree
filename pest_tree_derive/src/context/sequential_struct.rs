@@ -96,9 +96,13 @@ impl SequentialFieldContext {
                         Some(convert_pair.clone())
                     }
                 };
+                let mut convert_pair_out = convert_pair.clone(); // this is important in case it is
+                // Successful Option -> fail option -> normal field
+                // The fail option needs to release potential_convert_pair into convert_pair.
                 let mut previous_was_used = true; // temporary value
-                let mut #field_value_ident = Option::None; //todo fix stupid error
+                let mut #field_value_ident = Option::None; // todo allow things other than option in skippable
                 if let Some(convert_pair) = potential_convert_pair {
+                    let backup_convert_pair = convert_pair.clone();
                     let potential_field_value_ident = move || -> Result<_,TreeError<#rule_ident>> {
                         #(#checks)*
                         
@@ -112,12 +116,17 @@ impl SequentialFieldContext {
                             previous_was_used = false;
                         }
                     }
+                    if previous_was_used {
+                        // unload potential
+                        convert_pair_out = backup_convert_pair.clone();
+                    }
                     #field_value_ident = potential_field_value_ident_unwrapped;
                 }
                 else {
                     // there are no more items (either the rest are empty Option<>s, or we have an error)
                     // convert_pair isn't shadowed, so we won't have type errors.
                 }
+                let convert_pair = convert_pair_out;
                 // future fix: potentially convert option::None to some user specified type
             }
         }
