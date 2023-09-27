@@ -156,7 +156,15 @@ impl EnumContext for ConditionalEnumContext {
                     let check_pair = pair.clone();
                     let backup_context = context.clone();
                     let mut convert_pairs = pair.clone().into_inner();
-                    let backup_convert_pair = convert_pairs.next().unwrap();
+                    let potential_backup_convert_pair = convert_pairs.next();
+                    if potential_backup_convert_pair.is_none() {
+                        return Err(WrongHierarchyError::as_tree_error(
+                            pair.clone(),
+                            backup_context.clone(),
+                            stringify!(#ident).to_string()
+                        ))
+                    }
+                    let backup_convert_pair = potential_backup_convert_pair.unwrap();
                     #(#overall_require_checks)*
                     #(#attempted_returns)*
                     return Err(ConditionalEnumError::as_tree_error(

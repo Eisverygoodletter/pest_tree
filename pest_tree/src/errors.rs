@@ -21,6 +21,8 @@ pub mod string_match;
 pub use string_match::*;
 pub mod conditional_enum;
 pub use conditional_enum::*;
+pub mod wrong_hierarchy;
+pub use wrong_hierarchy::*;
 /// An error emitted by when parsing.
 ///
 /// For pretty-printing, you can call [`TreeError::eprint`]
@@ -54,6 +56,8 @@ pub enum TreeError<'a, T: pest::RuleType> {
     StringMatchError(StringMatchError<'a, T>),
     /// When none of the variants in an enum matches the pair given
     ConditionalEnumError(ConditionalEnumError<'a, T>),
+    /// The pair's inner Pairs have the wrong depth/structure
+    WrongHierarchyError(WrongHierarchyError<'a, T>)
 }
 impl<'a, T: pest::RuleType + 'a> TreeError<'a, T> {
     /// Pretty print the error to the console.
@@ -80,6 +84,7 @@ impl<'a, T: pest::RuleType + 'a> TreeError<'a, T> {
             TreeError::PairCountError(v) => v.to_report(),
             TreeError::StringMatchError(v) => v.to_report(),
             TreeError::ConditionalEnumError(v) => v.to_report(),
+            TreeError::WrongHierarchyError(v) => v.to_report()
         }
     }
     /// Convert itself to a [`DisplayedTrace`]. If you only want the error printed to the console, use
@@ -93,6 +98,7 @@ impl<'a, T: pest::RuleType + 'a> TreeError<'a, T> {
             TreeError::PairCountError(v) => v.to_displayed_trace(),
             TreeError::StringMatchError(v) => v.to_displayed_trace(),
             TreeError::ConditionalEnumError(v) => v.to_displayed_trace(),
+            TreeError::WrongHierarchyError(v) => v.to_displayed_trace()
         }
     }
 }
