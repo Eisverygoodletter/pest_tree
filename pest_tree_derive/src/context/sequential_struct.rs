@@ -116,10 +116,8 @@ impl SequentialFieldContext {
                             previous_was_used = false;
                         }
                     }
-                    if previous_was_used {
-                        // unload potential
-                        convert_pair_out = backup_convert_pair.clone();
-                    }
+                    // unload convert_pair out of the closure
+                    convert_pair_out = backup_convert_pair.clone();
                     #field_value_ident = potential_field_value_ident_unwrapped;
                 }
                 else {

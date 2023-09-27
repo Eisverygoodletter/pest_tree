@@ -8,5 +8,5 @@ num_or_a = ${ a | num }
 d = {"d"}
 e = {"e"}
 f = {"f"}
-def = ${ d? ~ e? ~ f?}
+def = ${ d? ~ e? ~ f}
 repeating_a = { a* }
